@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Adaptive Neuro-Somatic Interface — Meaningful Path Therapy (Exclusive)</title>
+<style>
+  :root{
+    --bg:#0e111a; --panel:#151a25; --ink:#f2f5ff; --muted:#a9b0c2;
+    --accent:#78d2ff; --accent2:#b1ffbd; --warn:#ffd27a; --ok:#76f0a6;
+    --card:#121827; --radius:18px; --shadow:0 10px 28px rgba(0,0,0,.35);
+    --phaseDur:2s;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background: radial-gradient(1200px 620px at 0% -10%, #1a2250 0%, #0e111a 60%);
+    color:var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; line-height:1.55;
+  }
+  header{padding:18px 16px 8px; max-width:960px; margin:0 auto}
+  .brand{font-weight:800; letter-spacing:.2px; font-size:clamp(18px,4.5vw,22px)}
+  .credit{color:var(--muted); font-size:12px}
+  .wrap{max-width:960px; margin:0 auto; padding:0 12px 80px}
+  .card{
+    background:linear-gradient(180deg,#18203a,#141a2a); border:1px solid rgba(255,255,255,.06);
+    border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;
+  }
+  h2{margin:.25rem 0 0.75rem; font-size:clamp(18px,5vw,22px)}
+  h3{margin:.25rem 0 .5rem; font-size:clamp(16px,4.5vw,20px)}
+  p.small{color:var(--muted); font-size:13px; margin:.25rem 0 .75rem}
+  .muted{color:var(--muted)}
+  textarea, input[type="text"], input[type="number"], select{
+    width:100%; background:#0c1220; color:var(--ink); border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:12px 14px; outline:none; min-height:110px; font-size:16px;
+  }
+  input[type="text"], input[type="number"], select{min-height:auto}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .space{height:10px}
+  .chip{
+    padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
+    color:var(--ink); cursor:pointer; user-select:none; font-size:14px
+  }
+  .chip.active{background:#26335c; border-color:#41538a}
+  button{
+    -webkit-tap-highlight-color: transparent;
+    border:0; background:linear-gradient(90deg,var(--accent),#a7e4ff);
+    color:#0a1520; font-weight:800; padding:12px 16px; border-radius:14px; cursor:pointer;
+    box-shadow:0 6px 18px rgba(120,210,255,.35); font-size:15px;
+  }
+  button.secondary{background:linear-gradient(90deg,#26304f,#222a44); color:var(--ink); border:1px solid rgba(255,255,255,.1); box-shadow:none}
+  button.ghost{background:transparent; border:1px solid rgba(255,255,255,.14); color:var(--ink)}
+  button:disabled{opacity:.5; cursor:not-allowed}
+  .stack{display:grid; gap:12px}
+  .kpis{display:grid; grid-template-columns:1fr; gap:10px}
+  .kpi{background:#0f1528; border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:10px}
+  .kpi .lab{color:var(--muted); font-size:12px}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+  .range{accent-color:#78d2ff; width:100%}
+
+  /* Stepper */
+  .stepper{display:grid; gap:14px; margin-top:8px}
+  .step{display:none}
+  .step.active{display:block}
+  .progress{display:flex; gap:6px; margin:6px 2px 12px}
+  .dot{width:10px; height:10px; border-radius:999px; background:#2a355a; border:1px solid rgba(255,255,255,.12)}
+  .dot.on{background:#78d2ff}
+
+  /* Breath visual */
+  .breath{
+    display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:8px
+  }
+  .orbWrap{width:min(60vw,180px); height:min(60vw,180px); position:relative; margin:auto}
+  .orb{
+    width:100%; height:100%; border-radius:50%;
+    background: radial-gradient(90px 90px at 50% 50%, #8be4ff 0%, #2a90ff 45%, #16345c 100%);
+    box-shadow:0 0 120px rgba(98,180,255,.45), inset 0 0 40px rgba(5,10,30,.6);
+    transform: scale(0.82);
+    transition: transform var(--phaseDur) ease-in-out, filter var(--phaseDur) ease-in-out;
+    filter:saturate(1);
+    will-change: transform, filter;
+  }
+  .orb.inhale{transform: scale(1)}
+  .orb.exhale{transform: scale(0.72); filter:saturate(.85)}
+  .orb.hold{filter:saturate(1.2)}
+  .cue{min-width:120px; font-weight:800; text-align:center; font-size:clamp(14px,4.5vw,18px)}
+  .timer{font-variant-numeric:tabular-nums; font-weight:800}
+  @media(min-width:780px){
+    .kpis{grid-template-columns:repeat(3,1fr)}
+  }
+
+  /* Sticky nav for mobile */
+  .nav{
+    position:fixed; left:0; right:0; bottom:0; backdrop-filter: blur(8px);
+    background: linear-gradient(180deg, rgba(10,15,30,.0) 0%, rgba(10,15,30,.85) 40%, rgba(10,15,30,.95) 100%);
+    border-top:1px solid rgba(255,255,255,.08);
+    padding:10px; display:flex; gap:8px; justify-content:space-between; align-items:center;
+  }
+  .nav .left, .nav .right{display:flex; gap:8px}
+  footer{margin:16px 0 84px; text-align:center; color:var(--muted); font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Adaptive Neuro-Somatic Interface</div>
+  <div class="credit">Designed &amp; created exclusively for <strong>Meaningful Path Therapy</strong> — © Abdullah Al-Shoaibi</div>
+</header>
+
+<main class="wrap">
+  <div class="progress" id="progress"></div>
+
+  <section class="stepper">
+
+    <!-- STEP 1: INPUT -->
+    <section class="step active card" id="step1" aria-labelledby="s1h">
+      <h2 id="s1h">1) Start where you are</h2>
+      <p class="small">Type what’s here now. Quick tags help the first pass.</p>
+      <textarea id="thought" placeholder="e.g., I’m going to mess up this presentation and everyone will see I’m not good enough."></textarea>
+
+      <div class="space"></div>
+      <div class="row">
+        <div class="chip" data-tag="threat">Threat / Anxiety</div>
+        <div class="chip" data-tag="shame">Shame / Self-criticism</div>
+        <div class="chip" data-tag="anger">Anger / Frustration</div>
+        <div class="chip" data-tag="sadness">Sadness / Loss</div>
+        <div class="chip" data-tag="uncertainty">Uncertainty / Stuck</div>
+      </div>
+
+      <div class="space"></div>
+      <div class="row">
+        <button id="analyseBtn">Analyse &amp; build plan</button>
+        <button id="dictateBtn" class="ghost" title="Speech recognition">🎙 Speak</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+      </div>
+
+      <div class="space"></div>
+      <div class="kpis">
+        <div class="kpi"><div class="lab">Primary tone</div><div id="toneVal" class="mono">—</div></div>
+        <div class="kpi"><div class="lab">Cognitive pattern</div><div id="cogVal" class="mono">—</div></div>
+        <div class="kpi"><div class="lab">Path</div><div id="pathVal" class="mono small">—</div></div>
+      </div>
+    </section>
+
+    <!-- STEP 2: STABILISE -->
+    <section class="step card" id="step2" aria-labelledby="s2h">
+      <h2 id="s2h">2) Stabilise your body</h2>
+      <div class="stack">
+        <div>
+          <strong>Breath pattern:</strong> <span id="breathName" class="mono">—</span><br/>
+          <span id="breathDesc" class="muted small">—</span>
+          <div class="space"></div>
+          <div class="breath">
+            <div class="orbWrap"><div id="orb" class="orb" role="img" aria-label="breathing orb"></div></div>
+            <div style="flex:1; min-width:200px">
+              <div class="cue" id="cue" aria-live="polite">—</div>
+              <div class="row muted small" style="justify-content:center; margin-top:4px">
+                <div>Cycle: <span class="mono" id="cycleStr">—</span></div>
+                <div>•</div>
+                <div>Elapsed: <span class="mono timer" id="elapsed">00:00</span></div>
+              </div>
+              <div class="row small" style="justify-content:center; margin-top:8px">
+                <label>Minutes <input id="minutes" type="number" min="1" max="12" value="3" style="width:68px"></label>
+                <label>Pace
+                  <select id="paceSel">
+                    <option value="1.25" selected>Slow</option>
+                    <option value="1.0">Normal</option>
+                    <option value="0.85">Slightly faster</option>
+                  </select>
+                </label>
+                <label>Audio cue <input id="audioToggle" type="checkbox"></label>
+              </div>
+              <div class="row" style="justify-content:center; margin-top:8px">
+                <button id="breathStart">Start</button>
+                <button id="breathStop" class="secondary">Stop</button>
+              </div>
+              <audio id="tick" preload="auto">
+                <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAACAAABAQAA" type="audio/wav">
+              </audio>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="background:#0f1528; border-color:rgba(255,255,255,.06)">
+          <strong>Targeted micro-movement:</strong> <span id="moveName" class="mono">—</span>
+          <div class="muted small" id="moveSteps" style="margin-top:6px">—</div>
+          <div class="row" style="margin-top:8px">
+            <button id="nextMove" class="ghost">Show another option</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: REFRAME -->
+    <section class="step card" id="step3" aria-labelledby="s3h">
+      <h2 id="s3h">3) Reframe the thought</h2>
+      <div class="stack">
+        <div class="card" style="background:#0f1528; border-color:rgba(255,255,255,.06)">
+          <strong>Try this:</strong>
+          <div id="reframe" class="small" style="margin-top:6px">—</div>
+          <div class="row" style="margin-top:8px">
+            <button id="altReframe" class="ghost">Another prompt</button>
+          </div>
+        </div>
+        <div class="card" style="background:#0f1528; border-color:rgba(255,255,255,.06)">
+          <strong>Say aloud:</strong>
+          <div id="defusion" class="small" style="margin-top:6px">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: ANCHOR -->
+    <section class="step card" id="step4" aria-labelledby="s4h">
+      <h2 id="s4h">4) Anchor it</h2>
+      <p class="small">Choose a simple phrase and a small gesture (e.g., hand on sternum + longer out-breath). We’ll run a 20-second focus.</p>
+      <div class="row">
+        <input id="anchorText" type="text" placeholder="e.g., I can meet this moment.">
+        <button id="ritual" class="secondary">Start 20-second anchor</button>
+      </div>
+    </section>
+
+    <!-- STEP 5: FEEDBACK -->
+    <section class="step card" id="step5" aria-labelledby="s5h">
+      <h2 id="s5h">5) Feedback → adapt</h2>
+      <div class="stack">
+        <div class="card" style="background:#0f1528; border-color:rgba(255,255,255,.06)">
+          <div class="row" style="gap:16px; align-items:center">
+            <div style="min-width:120px"><strong>Tension</strong> <span id="tensionVal" class="mono">5</span></div>
+            <input class="range" id="tension" type="range" min="0" max="10" value="5">
+          </div>
+        </div>
+        <div class="card" style="background:#0f1528; border-color:rgba(255,255,255,.06)">
+          <div class="row" style="gap:16px; align-items:center">
+            <div style="min-width:120px"><strong>Clarity</strong> <span id="clarityVal" class="mono">5</span></div>
+            <input class="range" id="clarity" type="range" min="0" max="10" value="5">
+          </div>
+        </div>
+        <div class="card" style="background:#0f1528; border-color:rgba(255,255,255,.06)">
+          <div class="row" style="gap:16px; align-items:center">
+            <div style="min-width:120px"><strong>Energy</strong> <span id="energyVal" class="mono">5</span></div>
+            <input class="range" id="energy" type="range" min="0" max="10" value="5">
+          </div>
+        </div>
+        <div class="row">
+          <button id="updatePlan">Update plan</button>
+          <button id="saveNotes" class="ghost">Export notes</button>
+        </div>
+        <div id="note" class="muted small">—</div>
+      </div>
+    </section>
+
+  </section>
+</main>
+
+<!-- Sticky step navigation -->
+<div class="nav" role="navigation" aria-label="Step navigation">
+  <div class="left">
+    <button id="backBtn" class="secondary">Back</button>
+  </div>
+  <div class="right">
+    <button id="nextBtn">Next</button>
+  </div>
+</div>
+
+<footer>
+  For information only; not a medical device. Use clinical judgement and adapt for each person.
+</footer>
+
+<script>
+/* ======= Copy is written to “You” language ======= */
+
+/* ---------- Lexicons & rules (offline) ---------- */
+const LEX = {
+  threat: ["anxious","panic","panic attack","afraid","scared","unsafe","in danger","overwhelm","overwhelmed","worry","worried","terrified","heart racing"],
+  shame: ["ashamed","worthless","failure","not good enough","stupid","guilty","disgusting","embarrassed","humiliated"],
+  anger: ["angry","furious","rage","irritated","hate","unfair","resent","annoyed","fuming"],
+  sadness: ["sad","empty","lonely","grief","grieving","loss","hopeless","cry","weary","tired of"],
+  uncertainty: ["confused","unsure","uncertain","don’t know","dont know","stuck","paralysed","paralyzed","can’t decide","cant decide"]
+};
+const DISTORTIONS = [
+  {name:"All-or-Nothing", re:/\b(always|never|everyone|no one|completely|totally)\b/i},
+  {name:"Shoulding", re:/\b(should|must|have to|ought to)\b/i},
+  {name:"Catastrophising", re:/\b(disaster|ruined|can(’|')t handle|unbearable|worst|terrible)\b/i},
+  {name:"Mind-reading", re:/\b(they (think|will think)|everyone will (see|think)|people (know|see))\b/i},
+  {name:"Fortune-telling", re:/\b(will go wrong|going to fail|it’ll fail|it will fail)\b/i},
+  {name:"Labelling", re:/\bi am (a|an) (idiot|failure|loser|fraud)\b/i}
+];
+
+/* Breath patterns (slower defaults) */
+const BREATH = {
+  "Physiological Sigh": {desc:"Double inhale, long exhale to quickly settle arousal", seq:[["Inhale",2.4],["Top-Inhale",1.1],["Exhale",7.0]]},
+  "Coherent 5.5": {desc:"Steady 5.5-second inhale/exhale to balance autonomic tone", seq:[["Inhale",5.5],["Exhale",5.5]]},
+  "Box 4-4-6-2": {desc:"Even in/hold/out/hold for stability (longer out)", seq:[["Inhale",4],["Hold",4],["Exhale",6],["Hold",2]]},
+  "Extended Exhale 4-8": {desc:"Longer out-breath to down-regulate", seq:[["Inhale",4],["Exhale",8]]}
+};
+
+/* Movements addressed to “You” */
+const MOVES = {
+  threat:[
+    {name:"Physiological Sigh Primer", steps:"Do two rounds: quick nasal inhale + small top-up sip, then slow mouth exhale. Keep shoulders soft."},
+    {name:"Soften Your Gaze", steps:"Unfocus your eyes and widen peripheral vision for 30–60s. Let your jaw unclench."},
+    {name:"Exhale-Led Neck Float", steps:"On each exhale, tiny nod down; inhale, return. 6–8 gentle reps."}
+  ],
+  shame:[
+    {name:"Self-Compassion Hold", steps:"Right hand to sternum, left to abdomen. Breathe 4-in / 6-out for 60–90s."},
+    {name:"Lengthen & Open", steps:"Sit tall, gentle chest lift, soften belly. Breathe into your back body."},
+    {name:"Soothing Forearm Stroke", steps:"Slowly stroke forearm elbow→wrist for ~60s each side."}
+  ],
+  anger:[
+    {name:"Isometric Release", steps:"Press palms together ~5s (40–60% effort) then release with long exhale; repeat 5 rounds."},
+    {name:"Jaw & Tongue Melt", steps:"Rest tongue heavy; let jaw slack. Long exhale with quiet ‘hhh’ sound."},
+    {name:"Grounded Stance", steps:"Feet wide, knees soft. Feel soles; exhale as if heat drains down."}
+  ],
+  sadness:[
+    {name:"Wrap & Breathe", steps:"Cross arms in a self-hug. Breathe into your back ribs for ~90s."},
+    {name:"Sacral Rock", steps:"Tiny pelvic rocks forward/back with your breath for 30–45s."},
+    {name:"Orient to Warmth", steps:"Find 3 comforting colours/objects. Let your breath meet what you see."}
+  ],
+  uncertainty:[
+    {name:"5-4-3-2-1 Grounding", steps:"Name 5 sights, 4 touches, 3 sounds, 2 smells, 1 taste."},
+    {name:"Foot Pressure Switch", steps:"Shift weight left↔right with your breath; 10 slow transfers."},
+    {name:"Micro-Plan Exhale", steps:"On each exhale, say one tiny next step; inhale: ‘just this’."}
+  ]
+};
+
+const REFRAMES = {
+  threat:[
+    "What’s most likely versus the worst story your brain is broadcasting?",
+    "If you handled 10% of this, what would that look like?",
+    "What would ‘good enough’ look like here?"
+  ],
+  shame:[
+    "If a friend were in your shoes, what might you notice they’re missing?",
+    "Whose standard are you using? Is it fair for a human today?",
+    "What shows you’re learning, not failing?"
+  ],
+  anger:[
+    "Which value or boundary is pinged—and what’s one proportionate step?",
+    "Aim at the problem, not the person. What’s the smallest fix?",
+    "How do you want to show up when this is over?"
+  ],
+  sadness:[
+    "What does this feeling ask you to honour or care for today?",
+    "If you added 5% nourishment, what would you choose?",
+    "What still matters that’s within reach right now?"
+  ],
+  uncertainty:[
+    "What’s the next action that’s too small to fail?",
+    "Which option keeps more doors open later?",
+    "Choose a ‘good-for-now’; review in 24 hours."
+  ]
+};
+const DEFUSION = {
+  generic:[
+    "You’re noticing the thought: ‘{t}’.",
+    "Thank you, mind. Noted.",
+    "That’s one prediction—not the only one."
+  ],
+  shame:[
+    "That’s your inner critic, not the full story.",
+    "You can be imperfect and worthy at once."
+  ],
+  threat:[
+    "Alarm ≠ danger. Your body is loud and you are still here.",
+    "Move 1% towards safety."
+  ],
+  anger:[
+    "This heat is energy; you choose direction."
+  ],
+  sadness:[
+    "This hurt is real, and you can carry it gently."
+  ],
+  uncertainty:[
+    "Uncertainty is here; action can still be tiny."
+  ]
+};
+
+/* ---------- DOM helpers & state ---------- */
+const $ = s=>document.querySelector(s);
+const $$ = s=>[...document.querySelectorAll(s)];
+const state = {
+  step:1, tag:null, tone:null, distortion:"—",
+  plan:{breath:"", move:0, reframe:0}, seq:[], pace:1.25,
+  minutes:3, start:0, playing:false, phaseIdx:0, timerId:null, phaseTo:null
+};
+
+/* ---------- Stepper ---------- */
+const totalSteps = 5;
+function renderProgress(){
+  const box = $("#progress"); box.innerHTML="";
+  for(let i=1;i<=totalSteps;i++){
+    const d=document.createElement("div"); d.className="dot"+(i<=state.step?" on":""); box.appendChild(d);
+  }
+}
+function gotoStep(n){
+  state.step = Math.max(1, Math.min(totalSteps, n));
+  $$(".step").forEach((el,i)=> el.classList.toggle("active", i===state.step-1));
+  $("#backBtn").disabled = (state.step===1);
+  $("#nextBtn").textContent = state.step===totalSteps ? "Finish" : "Next";
+  renderProgress();
+}
+$("#backBtn").addEventListener("click", ()=> gotoStep(state.step-1));
+$("#nextBtn").addEventListener("click", ()=>{
+  if(state.step===1){ $("#analyseBtn").click(); return; }
+  if(state.step<totalSteps) gotoStep(state.step+1);
+  else gotoStep(1);
+});
+renderProgress();
+
+/* ---------- Tag chips ---------- */
+$$(".chip").forEach(ch=>{
+  ch.addEventListener("click", ()=>{
+    $$(".chip").forEach(x=>x.classList.remove("active"));
+    ch.classList.add("active");
+    state.tag = ch.dataset.tag;
+  });
+});
+
+/* ---------- Speech input ---------- */
+$("#dictateBtn").addEventListener("click", ()=>{
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ alert("Speech recognition isn’t supported in this browser."); return; }
+  const rec = new SR(); rec.lang = "en-GB"; rec.onresult = e => { $("#thought").value = e.results[0][0].transcript; };
+  rec.start();
+});
+
+/* ---------- Analysis ---------- */
+function detectTone(text){
+  const s=text.toLowerCase();
+  const scores = {threat:0, shame:0, anger:0, sadness:0, uncertainty:0};
+  for(const k in LEX){ LEX[k].forEach(w=>{ if(s.includes(w)) scores[k]+=1; }); }
+  const hit = DISTORTIONS.find(d=>d.re.test(s));
+  const distortion = hit ? hit.name : "—";
+  let tone = Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
+  tone = (tone && tone[1]>0) ? tone[0] : (state.tag || "uncertainty");
+  return {tone, distortion};
+}
+function chooseBreath(tone){
+  if(tone==="threat") return "Physiological Sigh";
+  if(tone==="anger") return "Extended Exhale 4-8";
+  if(tone==="shame") return "Coherent 5.5";
+  if(tone==="sadness") return "Coherent 5.5";
+  return "Box 4-4-6-2";
+}
+function nextMove(tone, idx=0){ const arr=MOVES[tone]||MOVES.uncertainty; return arr[idx % arr.length]; }
+function reframesFor(t){ return REFRAMES[t] || REFRAMES.uncertainty; }
+function defusionFor(t){ return (DEFUSION[t]||[]).concat(DEFUSION.generic); }
+function mmss(s){ s=Math.max(0,Math.floor(s)); const m=String(Math.floor(s/60)).padStart(2,"0"); const ss=String(s%60).padStart(2,"0"); return `${m}:${ss}`; }
+
+$("#analyseBtn").addEventListener("click", ()=>{
+  const text = $("#thought").value.trim();
+  const {tone, distortion} = detectTone(text);
+  state.tone = tone; state.distortion = distortion;
+
+  $("#toneVal").textContent = tone.charAt(0).toUpperCase()+tone.slice(1);
+  $("#cogVal").textContent = distortion;
+
+  const bname = chooseBreath(tone);
+  state.plan.breath = bname; state.seq = BREATH[bname].seq;
+  $("#breathName").textContent = bname;
+  $("#breathDesc").textContent = BREATH[bname].desc;
+  $("#cycleStr").textContent = state.seq.map(p=>`${p[0]}:${p[1]}s`).join(" • ");
+  $("#pathVal").textContent = `${bname} → ${nextMove(tone).name} → Reframe`;
+
+  state.plan.move = 0;
+  const mv = nextMove(tone,0);
+  $("#moveName").textContent = mv.name;
+  $("#moveSteps").textContent = mv.steps;
+
+  state.plan.reframe = 0;
+  const r = reframesFor(tone)[0];
+  $("#reframe").textContent = r;
+
+  const d = defusionFor(tone)[0].replace("{t}", text || "this");
+  $("#defusion").textContent = d;
+
+  gotoStep(2);
+});
+
+/* ---------- Breathing engine (smooth animation + proper timing) ---------- */
+const orb = $("#orb"), cueEl = $("#cue");
+let tickI=null, elapsedI=null, startMs=0, phaseIdx=0, totalMs=0, phaseTo=null;
+
+function playTick(){ if($("#audioToggle").checked){ const a=$("#tick"); a.currentTime=0; a.play().catch(()=>{}); } }
+
+function setPhase(label, secs){
+  // update duration for CSS transitions
+  document.documentElement.style.setProperty('--phaseDur', (secs*state.pace)+"s");
+  // reset classes then apply with a frame delay to ensure transition fires
+  orb.classList.remove("inhale","exhale","hold");
+  requestAnimationFrame(()=>{
+    if(label.toLowerCase().includes("inhale")) orb.classList.add("inhale");
+    else if(label.toLowerCase().includes("exhale")) orb.classList.add("exhale");
+    else orb.classList.add("hold");
+  });
+  cueEl.textContent = label;
+  playTick();
+}
+
+function runBreath(){
+  if(!state.seq.length) return;
+  clearInterval(elapsedI); clearTimeout(phaseTo);
+  startMs = performance.now(); totalMs = state.minutes*60*1000; phaseIdx=0;
+  state.playing = true; $("#elapsed").textContent = "00:00";
+
+  function nextPhase(){
+    const [label, secsBase] = state.seq[phaseIdx];
+    const secs = secsBase * state.pace;
+    setPhase(label, secs);
+    phaseTo = setTimeout(()=>{
+      const now = performance.now();
+      if(now - startMs >= totalMs){ stopBreath(); return; }
+      phaseIdx = (phaseIdx + 1) % state.seq.length;
+      nextPhase();
+    }, secs*1000);
+  }
+  nextPhase();
+
+  elapsedI = setInterval(()=>{
+    const now = performance.now();
+    $("#elapsed").textContent = mmss((now - startMs)/1000);
+  }, 250);
+}
+function stopBreath(){
+  clearInterval(elapsedI); clearTimeout(phaseTo);
+  state.playing=false; cueEl.textContent="—";
+  orb.classList.remove("inhale","exhale","hold");
+  $("#elapsed").textContent = "00:00";
+}
+
+$("#breathStart").addEventListener("click", ()=>{
+  state.minutes = Math.max(1, Math.min(12, parseInt($("#minutes").value||"3",10)));
+  state.pace = parseFloat($("#paceSel").value || "1.25");
+  runBreath();
+});
+$("#breathStop").addEventListener("click", stopBreath);
+
+/* ---------- Movement & Reframe cycling ---------- */
+$("#nextMove").addEventListener("click", ()=>{
+  if(!state.tone) return;
+  state.plan.move++;
+  const mv = nextMove(state.tone, state.plan.move);
+  $("#moveName").textContent = mv.name;
+  $("#moveSteps").textContent = mv.steps;
+});
+$("#altReframe").addEventListener("click", ()=>{
+  if(!state.tone) return;
+  const arr = reframesFor(state.tone);
+  state.plan.reframe = (state.plan.reframe+1) % arr.length;
+  $("#reframe").textContent = arr[state.plan.reframe];
+});
+
+/* ---------- Feedback adapt ---------- */
+["tension","clarity","energy"].forEach(id=>{
+  const el=$("#"+id), val=$("#"+id+"Val");
+  el.addEventListener("input", ()=> val.textContent = el.value);
+});
+$("#updatePlan").addEventListener("click", ()=>{
+  const t=+$("#tension").value, c=+$("#clarity").value, e=+$("#energy").value;
+  let mins = 3;
+  if(t>=7) mins=4; if(t>=9) mins=5;
+  if(state.tone){
+    if(state.tone==="threat" && t>=7) state.plan.breath="Physiological Sigh";
+    else if((state.tone==="sadness"||state.tone==="uncertainty") && e<=4) state.plan.breath="Coherent 5.5";
+    else if(state.tone==="anger" && t>=6) state.plan.breath="Extended Exhale 4-8";
+    else if(c<=3) state.plan.breath="Box 4-4-6-2"; // simpler cadence when clarity is low
+  }
+  state.minutes = mins; $("#minutes").value = mins;
+  const b=state.plan.breath; state.seq = BREATH[b].seq;
+  $("#breathName").textContent = b; $("#breathDesc").textContent = BREATH[b].desc;
+  $("#cycleStr").textContent = state.seq.map(p=>`${p[0]}:${p[1]}s`).join(" • ");
+  $("#note").textContent = `Plan updated: ${b}, ${mins} minute(s).`;
+});
+
+/* ---------- Ritual overlay ---------- */
+let overlay=null, overlayT=null;
+function showOverlay(text){
+  if(overlay) overlay.remove();
+  overlay = document.createElement("div");
+  overlay.style.position="fixed"; overlay.style.inset="0"; overlay.style.zIndex="9999";
+  overlay.style.display="grid"; overlay.style.placeItems="center";
+  overlay.style.background="linear-gradient(135deg,#0b1228,#11193a 60%,#0b1228)";
+  overlay.innerHTML = `
+    <style>@keyframes fade{from{opacity:.0}to{opacity:1}}</style>
+    <div style="text-align:center; max-width:800px; padding:20px; animation:fade .35s ease-out">
+      <div style="font-size:clamp(22px,6.5vw,44px); font-weight:900; letter-spacing:.2px">${text||"I can meet this moment."}</div>
+      <div class="muted" style="margin-top:8px">Hand on chest. Lengthen the out-breath. Let your shoulders descend.</div>
+      <div style="margin-top:16px"><button id="closeOverlay" class="secondary">Close</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  $("#closeOverlay").addEventListener("click", ()=>{ clearTimeout(overlayT); overlay.remove(); overlay=null; });
+  overlayT = setTimeout(()=>{ if(overlay){ overlay.remove(); overlay=null; } }, 20000);
+}
+$("#ritual").addEventListener("click", ()=>{
+  const t = $("#anchorText").value.trim();
+  showOverlay(t || "I can meet this moment.");
+});
+
+/* ---------- Save notes ---------- */
+$("#saveNotes").addEventListener("click", ()=>{
+  const text = $("#thought").value.trim() || "—";
+  const now = new Date();
+  const blob = new Blob([`Adaptive Neuro-Somatic Interface — Notes
+Date: ${now.toLocaleString()}
+Primary tone: ${state.tone||"—"}
+Distortion: ${state.distortion}
+Plan: ${state.plan.breath||"—"} > ${$("#moveName").textContent} > Reframe
+Thought: ${text}
+
+Reframe: ${$("#reframe").textContent}
+Say aloud: ${$("#defusion").textContent}
+
+Feedback:
+- Tension: ${$("#tension").value}
+- Clarity: ${$("#clarity").value}
+- Energy: ${$("#energy").value}
+`], {type:"text/plain"});
+  const a=document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `ANSI_Notes_${now.toISOString().slice(0,16).replace(/[:T]/g,"-")}.txt`;
+  a.click();
+});
+
+/* ---------- Clear ---------- */
+$("#clearBtn").addEventListener("click", ()=>{
+  $("#thought").value=""; $("#toneVal").textContent="—"; $("#cogVal").textContent="—"; $("#pathVal").textContent="—";
+  $("#breathName").textContent="—"; $("#breathDesc").textContent="—"; $("#cycleStr").textContent="—"; $("#cue").textContent="—";
+  $("#moveName").textContent="—"; $("#moveSteps").textContent="—"; $("#reframe").textContent="—"; $("#defusion").textContent="—";
+  stopBreath(); $("#note").textContent="—";
+  gotoStep(1);
+});
+
+/* ---------- Minutes / Pace listeners ---------- */
+$("#minutes").addEventListener("change", e=>{ state.minutes = Math.max(1, Math.min(12, parseInt(e.target.value||"3",10))); });
+$("#paceSel").addEventListener("change", e=>{ state.pace = parseFloat(e.target.value||"1.25"); });
+
+/* ---------- Init ---------- */
+renderProgress(); gotoStep(1);
+</script>
+</body>
+</html>
